@@ -12,7 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pagination.WebApi.Contexts;
+using Pagination.WebApi.Data;
+using Pagination.WebApi.Middleware;
 using Pagination.WebApi.Services;
 
 namespace Pagination.WebApi
@@ -29,10 +30,8 @@ namespace Pagination.WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+            services.AddDbContext<NorthwindContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddHttpContextAccessor();
             services.AddSingleton<IUriService>(o =>
             {
@@ -55,6 +54,8 @@ namespace Pagination.WebApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UsePageSize();
 
             app.UseAuthorization();
 
