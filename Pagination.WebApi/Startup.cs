@@ -31,7 +31,7 @@ namespace Pagination.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<NorthwindContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-
+            services.AddMemoryCache();
             services.AddHttpContextAccessor();
             services.AddSingleton<IUriService>(o =>
             {

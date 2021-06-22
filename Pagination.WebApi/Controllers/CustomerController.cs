@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Pagination.WebApi.Data;
 using Pagination.WebApi.Filter;
 using Pagination.WebApi.Helpers;
@@ -21,17 +22,25 @@ namespace Pagination.WebApi.Controllers
     {
         private readonly NorthwindContext context;
         private readonly IUriService uriService;
-        public CustomerController(NorthwindContext context, IUriService uriService)
+        private readonly IMemoryCache memoryCache;
+        private int? pageSizeCached;
+
+        public CustomerController(NorthwindContext context, IUriService uriService, IMemoryCache memoryCache)
         {
             this.context = context;
             this.uriService = uriService;
+            this.memoryCache = memoryCache;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] uint pageNumber, [FromQuery] uint pageSize)
         {
             var route = Request.Path.Value;
+            PaginationFilter validFilter;
 
-            var validFilter = new PaginationFilter((int)pageNumber, (int)pageSize);
+            if (memoryCache.TryGetValue("PageSize", out pageSizeCached))
+                validFilter = new PaginationFilter((int)pageNumber, (int)pageSizeCached);
+            else
+                validFilter = new PaginationFilter((int)pageNumber, (int)pageSize);
 
             var pagedData = await context.Customers
                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)

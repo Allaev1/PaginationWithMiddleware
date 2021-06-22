@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -8,20 +9,27 @@ using System.Threading.Tasks;
 
 namespace Pagination.WebApi.Middleware
 {
-    public class PageSizeMiddleware 
+    public class PageSizeMiddleware
     {
         RequestDelegate next;
-        ILogger<PageSizeMiddleware> logger;
+        IMemoryCache memoryCache;
+        int? pageSize;
 
-        public PageSizeMiddleware(RequestDelegate next, ILogger<PageSizeMiddleware> logger)
+        public PageSizeMiddleware(RequestDelegate next, IMemoryCache memoryCache)
         {
             this.next = next;
-            this.logger = logger;
+            this.memoryCache = memoryCache;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
-            var a = httpContext.Request.Query.Keys.Remove("PageSize");
+            if (!memoryCache.TryGetValue("PageSize", out pageSize))
+            {
+                pageSize = Convert.ToInt16(httpContext.Request.Query["PageSize"]);
+                memoryCache.Set("PageSize", pageSize);
+            }
+
+            await next(httpContext);
         }
     }
 }
