@@ -55,6 +55,7 @@ namespace Pagination.WebApi
 
             app.UseRouting();
 
+            //Calling custom middleware
             app.UsePageSize();
 
             app.UseAuthorization();
