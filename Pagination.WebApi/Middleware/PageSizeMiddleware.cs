@@ -28,23 +28,24 @@ namespace Pagination.WebApi.Middleware
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
-            var pageSizeCached = memoryCache.TryGetValue(PAGE_SIZE_LITERAL, out pageSize);
-
-            if (pageSizeCached)
+            if (StringValues.IsNullOrEmpty(httpContext.Request.Query[PAGE_SIZE_LITERAL]))
             {
-                List<KeyValuePair<string, StringValues>> keyValuesParameters = new List<KeyValuePair<string, StringValues>>();
-
-                var queryCollection = httpContext.Request.Query;
-
-                foreach(var query in queryCollection)
+                if (memoryCache.TryGetValue(PAGE_SIZE_LITERAL, out pageSize))
                 {
-                    if (query.Key == PAGE_SIZE_LITERAL)
-                        keyValuesParameters.Add(new KeyValuePair<string, StringValues>(PAGE_SIZE_LITERAL, new StringValues(pageSize.ToString())));
-                    else
-                        keyValuesParameters.Add(new KeyValuePair<string, StringValues>(query.Key, query.Value));
-                }
+                    List<KeyValuePair<string, StringValues>> keyValuesParameters = new List<KeyValuePair<string, StringValues>>();
 
-                httpContext.Request.QueryString = QueryString.Create(keyValuesParameters); 
+                    var queryCollection = httpContext.Request.Query;
+
+                    foreach (var query in queryCollection)
+                    {
+                        if (query.Key == PAGE_SIZE_LITERAL)
+                            keyValuesParameters.Add(new KeyValuePair<string, StringValues>(PAGE_SIZE_LITERAL, new StringValues(pageSize.ToString())));
+                        else
+                            keyValuesParameters.Add(new KeyValuePair<string, StringValues>(query.Key, query.Value));
+                    }
+
+                    httpContext.Request.QueryString = QueryString.Create(keyValuesParameters);
+                }
             }
             else
             {
