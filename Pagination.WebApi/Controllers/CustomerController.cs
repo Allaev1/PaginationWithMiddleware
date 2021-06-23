@@ -22,25 +22,19 @@ namespace Pagination.WebApi.Controllers
     {
         private readonly NorthwindContext context;
         private readonly IUriService uriService;
-        private readonly IMemoryCache memoryCache;
-        private int? pageSizeCached;
 
-        public CustomerController(NorthwindContext context, IUriService uriService, IMemoryCache memoryCache)
+        public CustomerController(NorthwindContext context, IUriService uriService)
         {
             this.context = context;
             this.uriService = uriService;
-            this.memoryCache = memoryCache;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] uint pageNumber, [FromQuery] uint pageSize)
         {
             var route = Request.Path.Value;
-            PaginationFilter validFilter;
 
-            if (memoryCache.TryGetValue("PageSize", out pageSizeCached))
-                validFilter = new PaginationFilter((int)pageNumber, (int)pageSizeCached);
-            else
-                validFilter = new PaginationFilter((int)pageNumber, (int)pageSize);
+            var validFilter = new PaginationFilter((int)pageNumber, (int)pageSize);
 
             var pagedData = await context.Customers
                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
